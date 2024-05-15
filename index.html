@@ -39,10 +39,12 @@
       <!-- VR ruce s super-hands komponentou a sphere-collider -->
       <a-entity id="leftHand" hand-controls="hand: left; handModelStyle: lowPoly; color: #FF0000"
                 super-hands="colliderEvent: hit; colliderEndEvent: hitend"
-                sphere-collider="objects: .clickable"></a-entity>
+                sphere-collider="objects: .clickable"
+                color="#FFFFFF"></a-entity>
       <a-entity id="rightHand" hand-controls="hand: right; handModelStyle: lowPoly; color: #FF0000"
                 super-hands="colliderEvent: hit; colliderEndEvent: hitend"
-                sphere-collider="objects: .clickable"></a-entity>
+                sphere-collider="objects: .clickable"
+                color="#FFFFFF"></a-entity>
 
       <!-- Pozadí -->
       <a-sky color="#87CEEB"></a-sky> <!-- Modré nebe -->
@@ -86,7 +88,7 @@
 
       <!-- Tlačítko RESTART -->
       <a-entity id="restartButton" position="0.00 1.25 -0.35" geometry="primitive: plane; height: 0.2; width: 0.2"
-                material="color: blue" text="value: FOR RESTART PRESS A; align: center; color: white; width: 0.3"
+                material="color: blue" text="value: RESTART; align: center; color: white; width: 0.3"
                 class="clickable hoverable" visible="false"></a-entity>
 
       <script>
