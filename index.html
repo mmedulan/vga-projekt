@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Reflex Challenge VR</title>
+    <meta name="description" content="Simple VR Reflex Training Game">
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@6.1.1/dist/aframe-extras.misc.min.js"></script>
+    <script src="https://unpkg.com/super-hands@^3.0.3/dist/super-hands.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@6.1.1/dist/aframe-extras.controls.min.js"></script>
+    <style>
+      .a-text {
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 1.5em;
+        color: black;
+      }
+    </style>
+  </head>
+  <body>
+    <a-scene inspector>
+      <a-assets>
+        <audio id="bad-hit-sound" src="assets/bad_hit.wav" preload="auto"></audio>
+        <audio id="hit-sound" src="assets/hit.mp3" preload="auto"></audio>
+        <img id="heart" src="assets/heart.png" />
+        <img id="groundTexture" src="assets/ground.jpg" />
+      </a-assets>
+
+      <!-- Kamera s kurzorem a raycasterem -->
+      <a-entity camera look-controls wasd-controls position="0 1.6 0">
+        <a-entity cursor="rayOrigin: mouse"
+                  raycaster="objects: .clickable"
+                  position="0 0 -1"
+                  geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+                  material="color: transparent; opacity: 0"
+                  visible="false">
+        </a-entity>
+      </a-entity>
+
+      <!-- VR ruce s super-hands komponentou a sphere-collider -->
+      <a-entity id="leftHand" hand-controls="hand: left; handModelStyle: lowPoly; color: #FF0000"
+                super-hands="colliderEvent: hit; colliderEndEvent: hitend"
+                sphere-collider="objects: .clickable"></a-entity>
+      <a-entity id="rightHand" hand-controls="hand: right; handModelStyle: lowPoly; color: #FF0000"
+                super-hands="colliderEvent: hit; colliderEndEvent: hitend"
+                sphere-collider="objects: .clickable"></a-entity>
+
+      <!-- Pozadí -->
+      <a-sky color="#87CEEB"></a-sky> <!-- Modré nebe -->
+
+      <!-- Podlaha s texturou -->
+      <a-plane src="#groundTexture" position="0 0 0" rotation="-90 0 0" width="10" height="10"></a-plane>
+
+      <!-- Vytvoření 9 míčků před hráčem -->
+      <a-entity id="balls">
+        <a-sphere class="clickable ball" position="-0.25 1.5 -0.35" radius="0.05" color="green" hoverable clickable grabbable></a-sphere>
+        <a-sphere class="clickable ball" position="0 1.5 -0.35" radius="0.05" color="green" hoverable clickable grabbable></a-sphere>
+        <a-sphere class="clickable ball" position="0.25 1.5 -0.35" radius="0.05" color="green" hoverable clickable grabbable></a-sphere>
+        <a-sphere class="clickable ball" position="-0.25 1.25 -0.35" radius="0.05" color="green" hoverable clickable grabbable></a-sphere>
+        <a-sphere class="clickable ball" position="0 1.25 -0.35" radius="0.05" color="green" hoverable clickable grabbable></a-sphere>
+        <a-sphere class="clickable ball" position="0.25 1.25 -0.35" radius="0.05" color="green" hoverable clickable grabbable></a-sphere>
+        <a-sphere class="clickable ball" position="-0.25 1 -0.35" radius="0.05" color="green" hoverable clickable grabbable></a-sphere>
+        <a-sphere class="clickable ball" position="0 1 -0.35" radius="0.05" color="green" hoverable clickable grabbable></a-sphere>
+        <a-sphere class="clickable ball" position="0.25 1 -0.35" radius="0.05" color="green" hoverable clickable grabbable></a-sphere>
+      </a-entity>
+
+      <!-- Srdce -->
+      <a-entity id="hearts" position="-2 3 -3">
+        <a-image src="#heart" position="0 0 0" width="0.3" height="0.3"></a-image>
+        <a-image src="#heart" position="0.4 0 0" width="0.3" height="0.3"></a-image>
+        <a-image src="#heart" position="0.8 0 0" width="0.3" height="0.3"></a-image>
+        <a-image src="#heart" position="1.2 0 0" width="0.3" height="0.3"></a-image>
+        <a-image src="#heart" position="1.6 0 0" width="0.3" height="0.3"></a-image>
+        <a-image src="#heart" position="2 0 0" width="0.3" height="0.3"></a-image>
+        <a-image src="#heart" position="2.4 0 0" width="0.3" height="0.3"></a-image>
+        <a-image src="#heart" position="2.8 0 0" width="0.3" height="0.3"></a-image>
+        <a-image src="#heart" position="3.2 0 0" width="0.3" height="0.3"></a-image>
+        <a-image src="#heart" position="3.6 0 0" width="0.3" height="0.3"></a-image>
+      </a-entity>
+
+      <!-- Skóre zobrazené nad míčky -->
+      <a-entity id="scoreboard" position="0 2 -3" text="value: Score: 0; color: black; align: center; width: 3;"></a-entity>
+
+      <!-- Game Over text (skrytý) -->
+      <a-entity id="gameOver" position="0 2 -3" text="value: GAME OVER; color: red; align: center; width: 6;" visible="false"></a-entity>
+      <a-entity id="finalScore" position="0 1.5 -3" text="value: ; color: black; align: center; width: 6;" visible="false"></a-entity>
+
+      <!-- Tlačítko RESTART -->
+      <a-entity id="restartButton" position="0.00 1.25 -0.35" geometry="primitive: plane; height: 0.2; width: 0.2"
+                material="color: blue" text="value: FOR RESTART PRESS A; align: center; color: white; width: 0.3"
+                class="clickable hoverable" visible="false"></a-entity>
+
+      <script>
+        var lives = 10;
+
+        // Funkce pro přidání bodu při zásahu míčku
+        function addScore(ball) {
+          if (ball.hasAttribute('processed')) return; // Zamezit opakovanému volání funkce
+          ball.setAttribute('processed', true); // Označit kouli jako zpracovanou
+
+          if (ball.getAttribute('material').color === 'red') {
+            console.log('Ball clicked!');  // Debugovací zpráva
+            var hitSound = document.querySelector('#hit-sound');
+            hitSound.play();  // Přehrání zvuku správného zásahu
+
+            // Aktualizace skóre
+            var scoreboard = document.querySelector('#scoreboard');
+            var score = parseInt(scoreboard.getAttribute('text').value.split(': ')[1]) + 1;
+            scoreboard.setAttribute('text', 'value', 'Score: ' + score);
+          } else if (ball.getAttribute('material').color === 'green') {
+            var badHitSound = document.querySelector('#bad-hit-sound');
+            console.log('Playing bad hit sound'); // Debugovací zpráva pro přehrávání zvuku
+            badHitSound.play();  // Přehrání zvuku špatného zásahu
+
+            // Snížení počtu životů
+            lives--;
+            if (lives >= 0) {
+              var hearts = document.querySelectorAll('#hearts a-image');
+              hearts[lives].setAttribute('visible', 'false');
+            }
+            if (lives === 0) {
+              gameOver();
+            }
+          }
+          setTimeout(() => ball.removeAttribute('processed'), 500); // Po krátké chvíli povolit opakované zpracování
+        }
+
+        // Funkce pro náhodné blikání míčku
+        function flashRandomBall() {
+          var balls = document.querySelectorAll('.ball');
+          var randomIndex = Math.floor(Math.random() * balls.length);
+          var randomBall = balls[randomIndex];
+
+          // Změna barvy míčku na červenou
+          randomBall.setAttribute('material', 'color', 'red');
+
+          // Po krátké chvíli (1000ms) vrátíme barvu zpět na zelenou
+          setTimeout(function () {
+            randomBall.setAttribute('material', 'color', 'green');
+          }, 700);
+        }
+
+        // Přidání událostí pro každý míček
+        document.querySelectorAll('.ball').forEach(function(ball) {
+          console.log('Adding click and grab-start events to ball');  // Debugovací zpráva
+          ball.addEventListener('click', function() { addScore(ball); });
+          ball.addEventListener('grab-start', function() { addScore(ball); });
+        });
+
+        // Přidání kolizních detektorů k rukám
+        document.querySelectorAll('[hand-controls]').forEach(function(hand) {
+          hand.addEventListener('hit', function(evt) {
+            var hitEl = evt.detail.el;
+            if (hitEl && hitEl.classList.contains('ball')) {
+              hitEl.emit('click');  // Spustí událost kliknutí na míček
+            }
+          });
+        });
+
+        // Přidání události pro restartovací tlačítko
+        document.querySelector('#restartButton').addEventListener('click', function() {
+          restartGame();
+        });
+
+        // Funkce pro zobrazení Game Over
+        function gameOver() {
+          // Skrytí všech objektů ve scéně kromě hlášky Game Over, skóre a tlačítka RESTART
+          document.querySelector('#balls').setAttribute('visible', 'false');
+          document.querySelector('#hearts').setAttribute('visible', 'false');
+          document.querySelector('#scoreboard').setAttribute('visible', 'false');
+          document.querySelector('#leftHand').setAttribute('visible', 'false');
+          document.querySelector('#rightHand').setAttribute('visible', 'false');
+
+          // Zobrazení Game Over textu, skóre a tlačítka RESTART
+          var score = document.querySelector('#scoreboard').getAttribute('text').value.split(': ')[1];
+          document.querySelector('#gameOver').setAttribute('visible', 'true');
+          document.querySelector('#finalScore').setAttribute('text', 'value', 'YOUR SCORE: ' + score);
+          document.querySelector('#finalScore').setAttribute('visible', 'true');
+          document.querySelector('#restartButton').setAttribute('visible', 'true');
+
+          // Přidání detekce stisku tlačítka A na ovladači Meta Quest
+          document.querySelector('a-scene').addEventListener('buttondown', function(evt) {
+            if (evt.detail.id === 1) { // id 1 odpovídá tlačítku A na Meta Quest ovladači
+              restartGame();
+            }
+          });
+        }
+
+        // Funkce pro restart hry
+        function restartGame() {
+          // Resetování herních proměnných a stavu
+          lives = 10;
+          document.querySelector('#scoreboard').setAttribute('text', 'value', 'Score: 0');
+
+          // Znovu zobrazení všech objektů ve scéně
+          document.querySelector('#balls').setAttribute('visible', 'true');
+          document.querySelector('#hearts').setAttribute('visible', 'true');
+          document.querySelector('#scoreboard').setAttribute('visible', 'true');
+          document.querySelector('#leftHand').setAttribute('visible', 'true');
+          document.querySelector('#rightHand').setAttribute('visible', 'true');
+
+          // Skrytí Game Over textu, skóre a tlačítka RESTART
+          document.querySelector('#gameOver').setAttribute('visible', 'false');
+          document.querySelector('#finalScore').setAttribute('visible', 'false');
+          document.querySelector('#restartButton').setAttribute('visible', 'false');
+
+          // Resetování srdcí
+          document.querySelectorAll('#hearts a-image').forEach(function(heart) {
+            heart.setAttribute('visible', 'true');
+          });
+        }
+
+        // Spuštění blikání míčků v náhodných intervalech 1-3 sekundy
+        function startFlashing() {
+          flashRandomBall();
+          var randomInterval = Math.floor(Math.random() * 2000) + 1000;
+          setTimeout(startFlashing, randomInterval);
+        }
+
+        startFlashing(); // Zahájení blikání
+      </script>
+    </a-scene>
+  </body>
+</html>

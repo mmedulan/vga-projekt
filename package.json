@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "aframe": "^1.5.0",
+    "aframe-extras": "^7.4.0",
+    "super-hands": "^3.0.4"
+  }
+}
