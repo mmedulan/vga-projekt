@@ -212,3 +212,58 @@ AFRAME.registerComponent('movement-limiter', {
         this.el.setAttribute('position', position);  // Nastaví novou pozici
     }
 });
+
+
+
+
+AFRAME.registerComponent('oculus-thumbstick-controls', {
+    schema: {
+        acceleration: { default: 45 },
+        rigSelector: { default: "#cameraRig" },
+        fly: { default: false },
+        controllerOriented: { default: false },
+        adAxis: { default: 'x' },
+        wsAxis: { default: 'z' },
+        enabled: { default: true },
+        adEnabled: { default: true },
+        adInverted: { default: false },
+        wsEnabled: { default: true },
+        wsInverted: { default: false }
+    },
+    init: function () {
+        this.easing = 1.1;
+        this.velocity = new THREE.Vector3(0, 0, 0);
+        this.tsData = new THREE.Vector2(0, 0);
+        this.el.addEventListener('axismove', this.onAxisMove.bind(this));
+    },
+    onAxisMove: function (event) {
+        const axis = event.detail.axis;
+        const cameraRig = document.querySelector(this.data.rigSelector);
+
+        if (event.target.components['oculus-touch-controls'].data.hand === 'left') {
+            cameraRig.object3D.position.x += axis[2] * 0.1; // Horizontal movement
+            cameraRig.object3D.position.z += axis[3] * 0.1; // Forward/Backward movement
+        }
+
+        if (event.target.components['oculus-touch-controls'].data.hand === 'right') {
+            cameraRig.object3D.rotation.y -= axis[2] * 0.05; // Yaw rotation
+        }
+    }
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('[oculus-touch-controls]').forEach(el => {
+        el.setAttribute('oculus-thumbstick-controls', '');
+    });
+});
+
+
+
+
+document.querySelector('[oculus-touch-controls="hand: left"]').addEventListener('abuttondown', function(evt) {
+    restartGame();
+});
+document.querySelector('[oculus-touch-controls="hand: right"]').addEventListener('abuttondown', function(evt) {
+    restartGame();
+});
+
