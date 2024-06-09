@@ -99,8 +99,8 @@ function flashRandomBall() {
             roughness: 0,
             color: 'green',
             emissive: 'green',
-            emissiveIntensity: 5,
-            specular: '#FFF'
+            emissiveIntensity: 5
+            //specular: '#FFF'
         });
         randomBall.setAttribute('light', {
             type: 'point',
