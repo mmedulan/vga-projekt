@@ -18,7 +18,7 @@
 </head>
 <body>
 <a-scene inspector>
-  <a-entity id="cameraRig">
+  <a-entity id="cameraRig" movement-limiter="xmin: -5; xmax: 5; zmin: -5; zmax: 5">
     <a-camera></a-camera>
 
     <!-- VR ruce s super-hands komponentou a sphere-collider -->
@@ -32,6 +32,7 @@
               color="#FFFFFF"></a-entity>
     <a-entity oculus-touch-controls="hand: left"></a-entity>
     <a-entity oculus-touch-controls="hand: right"></a-entity>
+    <a-entity id="backgroundMusic" sound="src: #background-music; autoplay: true; loop: true; volume: 0.1"></a-entity>
   </a-entity>
 
 
@@ -42,8 +43,10 @@
   <a-assets>
     <audio id="bad-hit-sound" src="assets/bad_hit.wav" preload="auto"></audio>
     <audio id="hit-sound" src="assets/hit.mp3" preload="auto"></audio>
+    <audio id="background-music" src="assets/ambient.mp3" preload="auto"></audio>
 
-    <img id="heart" src="assets/heart.png" />
+
+    <img id="heart" src="assets/green_heart.png" />
     <img id="groundTexture" src="assets/ground.jpg" />
 
     <img id="night_sky" src="assets/night_sky.jpg">
@@ -51,6 +54,8 @@
     <a-asset-item id="gltf-ground" src="assets/gray_rocks/gray_rocks_4k.gltf"></a-asset-item>
 
   </a-assets>
+
+
 
   <!-- Kamera s kurzorem a raycasterem
   <a-entity camera look-controls wasd-controls position="0 1.6 0">
@@ -77,12 +82,16 @@
   <a-mixin id="futuristic-ball"
            material="shader: standard; metalness: 0.8; roughness: 0; emissive: green; emissiveIntensity: 5; specular: #FFF"
            shadow="cast: true"
-           light="type: point; color: green; intensity: 2; distance: 5; decay: 2;">
+           light="type: point; color: green; intensity: 2; distance: 5; decay: 2;"
+            explode="pieces: 10; radius: 0.01; color: red"
+  >
   </a-mixin>
 
 
   <!-- Vytvoření 9 míčků před hráčem -->
   <a-entity id="balls">
+
+
     <a-sphere class="clickable ball" position="-0.25 1.5 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
     <a-sphere class="clickable ball" position="0 1.5 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
     <a-sphere class="clickable ball" position="0.25 1.5 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
@@ -92,7 +101,26 @@
     <a-sphere class="clickable ball" position="-0.25 1 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
     <a-sphere class="clickable ball" position="0 1 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
     <a-sphere class="clickable ball" position="0.25 1 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
+
+
+  <!--Sloupce navíc: Levý sloupec míčků
+
+  <a-sphere class="clickable ball" position="-0.5 1.5 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
+
+  <a-sphere class="clickable ball" position="-0.5 1.25 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
+
+  <a-sphere class="clickable ball" position="-0.5 1 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
+  -->
+
+  <!-- Pravý sloupec míčků
+  <a-sphere class="clickable ball" position="0.5 1.5 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
+
+  <a-sphere class="clickable ball" position="0.5 1.25 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
+
+  <a-sphere class="clickable ball" position="0.5 1 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
+    -->
   </a-entity>
+
 
 
   <!-- Srdce -->
@@ -129,24 +157,22 @@
 
     // Funkce pro přidání bodu při zásahu míčku
     function addScore(ball) {
-      if (ball.hasAttribute('processed')) return; // Zamezit opakovanému volání funkce
-      ball.setAttribute('processed', true); // Označit kouli jako zpracovanou
+      if (ball.hasAttribute('processed')) return;
+      ball.setAttribute('processed', true);
 
       if (ball.getAttribute('material').color === 'red') {
-        console.log('Ball clicked!');  // Debugovací zpráva
         var hitSoundEntity = document.querySelector('#correctHitSound');
-        hitSoundEntity.components.sound.playSound();  // Přehrání zvuku správného zásahu
+        hitSoundEntity.components.sound.playSound();
 
-        // Aktualizace skóre
         var scoreboard = document.querySelector('#scoreboard');
         var score = parseInt(scoreboard.getAttribute('text').value.split(': ')[1]) + 1;
         scoreboard.setAttribute('text', 'value', 'Score: ' + score);
+
+        ball.emit('hit'); // Spustí explozi
       } else if (ball.getAttribute('material').color === 'green') {
         var badHitSoundEntity = document.querySelector('#incorrectHitSound');
-        console.log('Playing bad hit sound'); // Debugovací zpráva pro přehrávání zvuku
-        badHitSoundEntity.components.sound.playSound();  // Přehrání zvuku špatného zásahu
+        badHitSoundEntity.components.sound.playSound();
 
-        // Snížení počtu životů
         lives--;
         if (lives >= 0) {
           let hearts = document.querySelectorAll('#hearts a-image');
@@ -156,7 +182,7 @@
           gameOver();
         }
       }
-      setTimeout(() => ball.removeAttribute('processed'), 500); // Po krátké chvíli povolit opakované zpracování
+      setTimeout(() => ball.removeAttribute('processed'), 500);
     }
 
     // Funkce pro náhodné blikání míčku
@@ -311,8 +337,8 @@
         const cameraRig = document.querySelector(this.data.rigSelector);
 
         if (event.target.components['oculus-touch-controls'].data.hand === 'left') {
-          cameraRig.object3D.position.x += axis[2] * 0.1; // Horizontal movement
-          cameraRig.object3D.position.z += axis[3] * 0.1; // Forward/Backward movement
+          cameraRig.object3D.position.x += axis[2] * 0.05; // Horizontal movement
+          cameraRig.object3D.position.z += axis[3] * 0.05; // Forward/Backward movement
         }
 
         if (event.target.components['oculus-touch-controls'].data.hand === 'right') {
@@ -336,6 +362,110 @@
     document.querySelector('[oculus-touch-controls="hand: right"]').addEventListener('abuttondown', function(evt) {
       restartGame();
     });
+
+    /*
+    AFRAME.registerComponent('explode', {
+      schema: {
+        pieces: {type: 'int', default: 10},
+        radius: {type: 'number', default: 0.05},
+        color: {type: 'color', default: '#FF0000'}
+      },
+
+      init: function() {
+        this.el.addEventListener('hit', () => this.explode());
+      },
+
+      explode: function() {
+        let position = this.el.getAttribute('position');
+        let sceneEl = this.el.sceneEl;
+
+        for (let i = 0; i < this.data.pieces; i++) {
+          let piece = document.createElement('a-sphere');
+          piece.setAttribute('radius', this.data.radius);
+          piece.setAttribute('color', this.data.color);
+          piece.setAttribute('position', `${position.x} ${position.y} ${position.z}`);
+          piece.setAttribute('velocity', {
+            x: (Math.random() - 0.5) * 2,
+            y: (Math.random() - 0.5) * 2,
+            z: (Math.random() - 0.5) * 2
+          });
+          sceneEl.appendChild(piece);
+        }
+
+        this.el.parentNode.removeChild(this.el); // Odstraní původní kouli
+      }
+    });
+  */
+
+    function getRandomNumber(min, max) {
+      return Math.random() * (max - min) + min;
+    }
+
+    function setNewRandomPosition(ball) {
+      let balls = document.querySelectorAll('.ball');
+      let position;
+      let newPosition;
+      let isColliding;
+
+      do {
+        position = ball.getAttribute('position');
+        newPosition = {
+          x: position.x + getRandomNumber(-0.1, 0.1),
+          y: position.y + getRandomNumber(-0.1, 0.1),
+          z: position.z
+        };
+
+        isColliding = false;
+
+        balls.forEach(otherBall => {
+          if (otherBall !== ball) {
+            let otherPosition = otherBall.getAttribute('position');
+            let distance = Math.sqrt(
+                    Math.pow(newPosition.x - otherPosition.x, 2) +
+                    Math.pow(newPosition.y - otherPosition.y, 2)
+            );
+
+            if (distance < 0.1) { // Adjust this value based on the radius of the spheres
+              isColliding = true;
+            }
+          }
+        });
+      } while (isColliding);
+
+      ball.setAttribute('animation__position', {
+        property: 'position',
+        to: `${newPosition.x} ${newPosition.y} ${newPosition.z}`,
+        dur: getRandomNumber(3000, 5000), // Duration between 3 and 5 seconds
+        easing: 'easeInOutSine',
+        loop: false
+      });
+    }
+
+    // Add smooth random movement animations to each ball
+    document.querySelectorAll('.ball').forEach(function(ball) {
+      setInterval(function() {
+        setNewRandomPosition(ball);
+      }, getRandomNumber(1000, 2000));
+    });// Interval between 1 and 2 seconds
+
+    //Limiter pohybu
+    AFRAME.registerComponent('movement-limiter', {
+      schema: {
+        xmin: {type: 'number', default: -5},
+        xmax: {type: 'number', default: 5},
+        zmin: {type: 'number', default: -5},
+        zmax: {type: 'number', default: 5}
+      },
+      tick: function () {
+        var position = this.el.getAttribute('position');
+        if (position.x < this.data.xmin) position.x = this.data.xmin;
+        if (position.x > this.data.xmax) position.x = this.data.xmax;
+        if (position.z < this.data.zmin) position.z = this.data.zmin;
+        if (position.z > this.data.zmax) position.z = this.data.zmax;
+        this.el.setAttribute('position', position);
+      }
+    });
+
 
   </script>
 </a-scene>
