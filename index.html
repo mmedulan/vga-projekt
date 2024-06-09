@@ -78,6 +78,7 @@
   <!-- Podlaha s texturou -->
   <a-plane src="#groundTexture" position="0 0 0" rotation="-90 0 0" width="10" height="10" shadow="receive: ture"></a-plane>
 
+
   <!-- Vzhled koulí-->
   <a-mixin id="futuristic-ball"
            material="shader: standard; metalness: 0.8; roughness: 0; emissive: green; emissiveIntensity: 5; specular: #FFF"
@@ -93,15 +94,15 @@
   <a-entity id="balls">
 
 
-    <a-sphere class="clickable ball" position="-0.25 1.5 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
-    <a-sphere class="clickable ball" position="0 1.5 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
-    <a-sphere class="clickable ball" position="0.25 1.5 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
-    <a-sphere class="clickable ball" position="-0.25 1.25 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
-    <a-sphere class="clickable ball" position="0 1.25 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
-    <a-sphere class="clickable ball" position="0.25 1.25 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
-    <a-sphere class="clickable ball" position="-0.25 1 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
-    <a-sphere class="clickable ball" position="0 1 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
-    <a-sphere class="clickable ball" position="0.25 1 -0.35" radius="0.05" mixin="futuristic-ball"></a-sphere>
+    <a-sphere class="clickable ball" position="-0.25 1.5 -0.35" radius="0.05" mixin="futuristic-ball" sphere-collider></a-sphere>
+    <a-sphere class="clickable ball" position="0 1.5 -0.35" radius="0.05" mixin="futuristic-ball" sphere-collider></a-sphere>
+    <a-sphere class="clickable ball" position="0.25 1.5 -0.35" radius="0.05" mixin="futuristic-ball" sphere-collider></a-sphere>
+    <a-sphere class="clickable ball" position="-0.25 1.25 -0.35" radius="0.05" mixin="futuristic-ball" sphere-collider></a-sphere>
+    <a-sphere class="clickable ball" position="0 1.25 -0.35" radius="0.05" mixin="futuristic-ball" sphere-collider></a-sphere>
+    <a-sphere class="clickable ball" position="0.25 1.25 -0.35" radius="0.05" mixin="futuristic-ball" sphere-collider></a-sphere>
+    <a-sphere class="clickable ball" position="-0.25 1 -0.35" radius="0.05" mixin="futuristic-ball" sphere-collider></a-sphere>
+    <a-sphere class="clickable ball" position="0 1 -0.35" radius="0.05" mixin="futuristic-ball" sphere-collider></a-sphere>
+    <a-sphere class="clickable ball" position="0.25 1 -0.35" radius="0.05" mixin="futuristic-ball" sphere-collider></a-sphere>
 
 
   <!--Sloupce navíc: Levý sloupec míčků
@@ -141,6 +142,12 @@
   <!-- Skóre zobrazené nad míčky -->
   <a-entity id="scoreboard" position="0 2 -3" text="value: Score: 0; color: white; align: center; width: 3;"></a-entity>
 
+  <!-- Reakční doba pod skóre -->
+  <a-entity id="reactionTimeDisplay" position="0 1.5 -3" text="value: Average Reaction Time: 0ms; color: white; align: center; width: 3;"></a-entity>
+
+  <!-- Reakční doba posledního úderu pod skóre-->
+  <a-entity id="lastReactionTimeDisplay" position="0 1 -3" text="value: Reaction Time: 0ms; color: white; align: center; width: 3;"></a-entity>
+
   <!-- Game Over text (skrytý) -->
   <a-entity id="gameOver" position="0 2 -3" text="value: GAME OVER; color: red; align: center; width: 6;" visible="false"></a-entity>
   <a-entity id="finalScore" position="0 1.5 -3" text="value: ; color: white; align: center; width: 6;" visible="false"></a-entity>
@@ -148,6 +155,8 @@
   <!-- Tlačítko RESTART -->
   <a-entity id="restartButton" position="0 1 -3" geometry="primitive: plane; height: 0.2; width: 0.2" text="value: FOR RESTART PRESS A; align: center; color: white; width: 6"
             class="" visible="false"></a-entity>
+
+  <a-entity id="finalAverageReactionTime" position="0 0.5 -3" geometry="primitive: plane; height: 0.2; width: 0.2" text="value: AVERAGE REACTION TIME: ; align: center; color: white; width: 6" visible="false"></a-entity>
 
   <!-- Zvukové entity -->
   <a-entity id="correctHitSound" sound="src: #hit-sound; volume: 0.1"></a-entity>
