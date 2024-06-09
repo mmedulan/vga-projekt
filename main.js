@@ -77,8 +77,8 @@ function flashRandomBall() {
         roughness: 0,
         color: 'red',
         emissive: 'red',
-        emissiveIntensity: 5,
-        specular: '#FFF'
+        emissiveIntensity: 5
+        //specular: '#FFF'
     });
     randomBall.setAttribute('shadow', 'cast', true);  // Nastaví míček tak, aby vrhal stín
     randomBall.setAttribute('light', {
